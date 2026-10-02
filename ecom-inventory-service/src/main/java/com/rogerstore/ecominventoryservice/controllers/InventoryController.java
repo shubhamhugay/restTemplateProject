@@ -1,9 +1,8 @@
 package com.rogerstore.ecominventoryservice.controllers;
+
+import com.rogerstore.ecominventoryservice.entity.Inventory;
 import com.rogerstore.ecominventoryservice.service.InventoryService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/inventory")
@@ -18,9 +17,23 @@ public class InventoryController {
 
 
     @GetMapping("/{productId}")
-    public String checkInventory(@PathVariable String productId){
-        System.out.println("checking inventory service from other place");
-        return productId.equals("1") ? "in Stock" : " not available";
+    public Inventory checkInventory(@PathVariable Long productId) {
+        return inventoryService.checkStock(productId);
     }
 
+    @PostMapping
+    public String addProduct(@RequestBody Inventory inventory) {
+        return inventoryService.addProduct(inventory);
+    }
+
+    @PutMapping
+    public String updateProduct(
+            @RequestBody Inventory inventory) {
+        return inventoryService.updateProduct(inventory);
+    }
+
+    @DeleteMapping("/{productId}")
+    public String deleteProduct(@PathVariable Long productId) {
+        return inventoryService.deleteProduct(productId);
+    }
 }

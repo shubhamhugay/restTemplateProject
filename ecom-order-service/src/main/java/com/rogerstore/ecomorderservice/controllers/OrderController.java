@@ -23,11 +23,7 @@ public class OrderController {
 
     @PostMapping("/{productId}")
     public String orderPlace(@PathVariable String productId) {
-        String response = restTemplate.getForObject(
-                "http://localhost:8080/inventory/" +productId,
-                String.class
-        );
-        return "in Stock".equals(response)
-                ? "Order PLaced" : "order not PLaced";
+
+        return orderService.placeOrder(productId);
     }
 }
