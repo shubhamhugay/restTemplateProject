@@ -1,5 +1,6 @@
 package com.rogerstore.ecomorderservice.service;
 
+import com.rogerstore.ecomorderservice.client.InventoryClient;
 import com.rogerstore.ecomorderservice.dto.Inventory;
 import com.rogerstore.ecomorderservice.exception.MyCustomRuntimeException;
 import org.springframework.http.HttpStatusCode;
@@ -12,11 +13,13 @@ import org.springframework.web.client.RestTemplate;
 public class OrderService {
     private final RestClient restClient;
     private final RestTemplate restTemplate;
+    private final InventoryClient inventoryClient;
 
 
-    public OrderService(RestClient restClient, RestTemplate restTemplate) {
+    public OrderService(RestClient restClient, RestTemplate restTemplate, InventoryClient inventoryClient) {
         this.restClient = restClient;
         this.restTemplate = restTemplate;
+        this.inventoryClient = inventoryClient;
     }
 
 
@@ -34,15 +37,15 @@ public class OrderService {
 //                   .toEntity(Inventory.class);
 
 
-        ResponseEntity<Inventory> entity =restClient
-                   .get()
-                    .uri("http://localhost:8081/inventory/{productId}",productId)
-                    .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError,((request, response) ->
-                {
-                    throw new MyCustomRuntimeException(response.getStatusCode(),response.getHeaders());
-                }))
-                   .toEntity(Inventory.class);
+//        ResponseEntity<Inventory> entity =restClient
+//                   .get()
+//                    .uri("http://localhost:8081/inventory/{productId}",productId)
+//                    .retrieve()
+//                .onStatus(HttpStatusCode::is4xxClientError,((request, response) ->
+//                {
+//                    throw new MyCustomRuntimeException(response.getStatusCode(),response.getHeaders());
+//                }))
+//                   .toEntity(Inventory.class);
         // Exchange Example For Demo
        /* Object exchange = restClient.get()
                 .uri("http://localhost:8081/inventory/{productId}", productId)
@@ -55,18 +58,23 @@ public class OrderService {
                     }
                 }));*/
 
-        updateInventory(entity.getBody());
-        return entity.getBody()!=null && entity.getBody().getQuantity()>0?
-                     "Order PLaced" : "order not PLaced";
+
+        Inventory inventory = inventoryClient.getInventory(productId);
+        updateInventory(inventory);
+//        return entity.getBody()!=null && entity.getBody().getQuantity()>0?
+//                     "Order PLaced" : "order not PLaced";
+        return inventory.getQuantity() > 0 ?
+                "Order PLaced" : "order not PLaced";
     }
 
     private void updateInventory(Inventory inventory) {
-        inventory.setQuantity(inventory.getQuantity()-1);
-        restClient.post()
-                .uri("http://localhost:8081/inventory")
-                .body(inventory)
-                .retrieve()
-                .toBodilessEntity();
+        inventory.setQuantity(inventory.getQuantity() - 1);
+        inventoryClient.updateInventory(inventory);
+//                 restClient.post()
+//                .uri("http://localhost:8081/inventory")
+//                .body(inventory)
+//                .retrieve()
+//                .toBodilessEntity();
 
     }
 
